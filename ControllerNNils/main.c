@@ -1,27 +1,20 @@
-/*
- * ControllerNNils.c
- *
- * Created: 2019-05-30 01:51:44
- * Author : mghan
- */ 
 
-#define F_CPU 4000000
+#define F_CPU 16000000UL
 #include <avr/io.h>
 #include <avr/delay.h>
 #include <avr/interrupt.h>
 #include <stdlib.h>
-#include "lcd.h"
-#include "i2c.h"
-#include "font.h"
 #include <stdio.h>
 #include <avr/common.h>
 #include <stdbool.h>
-#include "uart.h"
 #include <string.h>
+#include "uart.h"
+#include "lcd.h"
+#include "i2c.h"
+#include "font.h"
 
-uint8_t up;
-uint8_t right;
- char message[10];
+int up;
+int right;
 
 void main_print(int right, int up, char msg[])
 {
@@ -33,16 +26,14 @@ void main_print(int right, int up, char msg[])
 
 	lcd_puts(msg);
 	lcd_puts(" ");
-	lcd_display();
-	
 }
 
 int main(void)
 {
-	
 	lcd_init(0xAF); 
 	initUART0();
 	
+	char message = 'Y';
 	unsigned int xAxis;
 	unsigned int yAxis;
 	char xString[4];
@@ -52,8 +43,6 @@ int main(void)
 	DDRD = 0b01111111;
 	//Print_pos(0,0);
 	
-	memset(message, '\0', sizeof(message));
-	
 	// ADC Enable and prescaler of 128
 	// 16000000/128 = 125000
 	ADMUX = (1<<REFS0);
@@ -62,7 +51,6 @@ int main(void)
     /* Replace with your application code */
     while (1) 
     {
-		
 		//Toggle the LSB in the ADMUX register to switch betweeen ADC0 and ADC1
 		ADMUX ^= (1 << 0);
 		
@@ -82,93 +70,88 @@ int main(void)
 		
 		yAxis = ADC; //Store ADC value
 		
-		
-		
-		itoa(yAxis,yString,10);
+		up = (xAxis/146)-3;
+		right = (yAxis/50)-10;
+
+		itoa(right,yString,10);
 		lcd_gotoxy(0,2);
 		lcd_puts("y axis  ");
 		lcd_puts(yString);
 		
 		lcd_puts("   ");
-		lcd_display();
 		
-		
-		
-		itoa(xAxis,xString,10);
+		itoa(up,xString,10);
 		lcd_gotoxy(0,0);
 		
 		lcd_puts("x axis  ");
 		lcd_puts(xString);
 		lcd_puts("     ");
-		//	lcd_display();
 		
-		
-		
-		up = (xAxis/146)-3;
-		right = (yAxis/50)-10;
-		
-			
-			if (right <= 1 && right >= -1)
+		if (right <= 1 && right >= -1)
+		{
+			if (up > 3)
 			{
-				if (up > 3)
-				{
-					//message = 'F';
-					strcpy(message, "F");
-					uart0_putc('F');
+				message = 'F';
+				//strcpy(message, "F");
 				
-				}
-				else if (up > 1)
-				{
-					//message = 'f';
-					strcpy(message, "f");
-				}
-				else if (up < -3)
-				{
-					//message = 'B';
-					strcpy(message, "B");
-				}
-				else if (up < -1)
-				{
-					//message = 'b';
-					strcpy(message, "b");
-				}
-				else
-				{
-					//message = 'S';
-					strcpy(message, "S");
-				}
 			}
-			else if (up > 0)
+			else if (up > 1)
 			{
-				if (right > 5)
-				{
-					//message = 'R';
-					strcpy(message, "F");
-				}
-				else if (right > 1)
-				{
-					//message = 'r';
-					strcpy(message, "r");
-				}
-				else if (right < -5)
-				{
-					//message = 'L';
-					strcpy(message, "L");
-				}
-				else if (right < -1)
-				{
-					//message = 'l';
-					strcpy(message, "l");
-				}
+				message = 'f';
+				//strcpy(message, "f");
+			}
+			else if (up < -3)
+			{
+				message = 'B';
+				//strcpy(message, "B");
+			}
+			else if (up < -1)
+			{
+				message = 'b';
+				//strcpy(message, "b");
 			}
 			else
 			{
-				//message = 'S';
-				strcpy(message, "S");
+				message = 'S';
+				//strcpy(message, "S");
 			}
-			
-			main_print(0, 0, message);
+		}
+		else if (up > 0)
+		{
+			if (right > 5)
+			{
+				message = 'R';
+				//strcpy(message, "F");
+			}
+			else if (right > 1)
+			{
+				message = 'r';
+				//strcpy(message, "r");
+			}
+			else if (right < -5)
+			{
+				message = 'L';
+				//strcpy(message, "L");
+			}
+			else if (right < -1)
+			{
+				message = 'l';
+				//strcpy(message, "l");
+			}
+		}
+		else
+		{
+			message = 'S';
+			//strcpy(message, "S");
+		}
 		
+		char printC[1];
+		memset(printC, '\0', sizeof(printC));
+		printC[0] = message;
+		main_print(0, 0, printC);
+		uart0_putc(message);
+		//uart0_puti16((int16_t) message);
+
+		lcd_display();
     }
 }
-
