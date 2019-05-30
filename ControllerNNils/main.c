@@ -5,7 +5,7 @@
  * Author : mghan
  */ 
 
-#define F_CPU 16000000
+#define F_CPU 4000000
 #include <avr/io.h>
 #include <avr/delay.h>
 #include <avr/interrupt.h>
@@ -39,8 +39,9 @@ void main_print(int right, int up, char msg[])
 
 int main(void)
 {
-	lcd_init(0xAF); 
 	
+	lcd_init(0xAF); 
+	initUART0();
 	
 	unsigned int xAxis;
 	unsigned int yAxis;
@@ -113,6 +114,8 @@ int main(void)
 				{
 					//message = 'F';
 					strcpy(message, "F");
+					uart0_putc('F');
+				
 				}
 				else if (up > 1)
 				{
