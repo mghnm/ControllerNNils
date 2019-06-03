@@ -5,10 +5,13 @@
 //  Created by Michael Köhler on 09.10.17.
 //
 //
-#define F_CPU 16000000UL
 
 #ifndef i2c_h
 #define i2c_h
+
+#ifndef F_CPU
+#define F_CPU 4000000UL
+#endif
 
 #ifdef __cplusplus
 extern "C" {
